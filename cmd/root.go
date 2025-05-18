@@ -77,8 +77,10 @@ func initConfig() {
 	viper.SetDefault("smtp.password", "")
 	viper.SetDefault("smtp.from_email", "")
 
-	if err := viper.ReadInConfig(); err == nil {
+	if err := viper.ReadInConfig(); err != nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	// Initialize logger

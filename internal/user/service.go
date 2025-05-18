@@ -19,16 +19,15 @@ import (
 	"errors"
 	"time"
 
+	"github.com/golgoth31/aliasme/internal/models"
+	aliasme "github.com/golgoth31/aliasme/pkg/proto"
 	"github.com/rs/xid"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/protobuf/types/known/timestamppb"
-	"gorm.io/gorm"
-
-	"github.com/golgoth31/aliasme/internal/models"
-	aliasme "github.com/golgoth31/aliasme/pkg/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
+	"gorm.io/gorm"
 )
 
 // Service handles user-related operations
@@ -151,5 +150,29 @@ func (s *Service) GetUserByEmail(ctx context.Context, req *aliasme.GetUserByEmai
 
 	return &aliasme.GetUserByEmailResponse{
 		UserId: user.ID,
+	}, nil
+}
+
+// ListUsers retrieves all users
+func (s *Service) ListUsers(ctx context.Context, req *aliasme.ListUsersRequest) (*aliasme.ListUsersResponse, error) {
+	var users []models.User
+	if err := s.db.Find(&users).Error; err != nil {
+		log.Error().Err(err).Msg("Failed to list users")
+		return nil, status.Error(codes.Internal, "failed to list users")
+	}
+
+	protoUsers := make([]*aliasme.User, len(users))
+	for i, user := range users {
+		protoUsers[i] = &aliasme.User{
+			Id:        user.ID,
+			Username:  user.Username,
+			Email:     user.Email,
+			CreatedAt: timestamppb.New(user.CreatedAt),
+			UpdatedAt: timestamppb.New(user.UpdatedAt),
+		}
+	}
+
+	return &aliasme.ListUsersResponse{
+		Users: protoUsers,
 	}, nil
 }

@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"net"
 	"net/http"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -48,15 +48,14 @@ func startServer() error {
 	}
 
 	// Initialize OVH client
-	ovhClient, err := ovh.New(&ovh.Config{
-		Endpoint:          viper.GetString("ovh.endpoint"),
-		ApplicationKey:    viper.GetString("ovh.application_key"),
-		ApplicationSecret: viper.GetString("ovh.application_secret"),
-		ConsumerKey:       viper.GetString("ovh.consumer_key"),
-	})
+	ovhClient, err := ovh.NewClient(
+		viper.GetString("ovh.endpoint"),
+		viper.GetString("ovh.application_key"),
+		viper.GetString("ovh.application_secret"),
+		viper.GetString("ovh.consumer_key"),
+	)
 	if err != nil {
-		// return fmt.Errorf("failed to initialize OVH client: %w", err)
-		log.Error().Err(err).Msgf("failed to initialize OVH client: %w", err)
+		log.Error().Err(err).Msg("Failed to initialize OVH client")
 	}
 
 	// Initialize email service
@@ -120,6 +119,7 @@ func startServer() error {
 	// Configure Echo
 	e.HideBanner = true
 	e.HidePort = true
+	e.Use(middleware.RequestID())
 	e.Use(logger.EchoLogger())
 	e.Use(echoprometheus.NewMiddleware("aliasme")) // adds middleware to gather metrics
 	e.GET("/metrics", echoprometheus.NewHandler()) // adds route to serve gathered metrics
@@ -131,13 +131,14 @@ func startServer() error {
 	})
 
 	// Serve Swagger UI from embedded files
-	swaggerFS, err := fs.Sub(static.Swagger, "swagger")
-	if err != nil {
-		return fmt.Errorf("failed to get swagger subdirectory: %w", err)
-	}
-
-	// Serve Swagger UI static files
-	e.GET("/swagger/*", echo.WrapHandler(http.StripPrefix("/swagger", http.FileServer(http.FS(swaggerFS)))))
+	group := e.Group("swagger")
+	group.Use(middleware.StaticWithConfig(middleware.StaticConfig{
+		HTML5:      false,
+		IgnoreBase: false,
+		Root:       "swagger", // because files are located in `web` directory in `webAssets` fs
+		Filesystem: http.FS(static.Swagger),
+		Browse:     false,
+	}))
 
 	// Start HTTP server
 	log.Info().Int("port", viper.GetInt("http.port")).Msg("Starting HTTP server")

@@ -44,6 +44,13 @@ service UserService {
       get: "/api/v1/users/email/{email}"
     };
   }
+
+  // List all users
+  rpc ListUsers(ListUsersRequest) returns (ListUsersResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users"
+    };
+  }
 }
 
 // Email service definition
@@ -133,6 +140,15 @@ message GetUserByEmailRequest {
 
 message GetUserByEmailResponse {
   string user_id = 1;
+}
+
+// New messages for ListUsers
+message ListUsersRequest {
+  // Empty request as we're listing all users
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
 }
 
 // Email related messages
