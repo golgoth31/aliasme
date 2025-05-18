@@ -1,0 +1,197 @@
+syntax = "proto3";
+
+package aliasme;
+
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/golgoth31/aliasme/pkg/proto;aliasme";
+
+// User service definition
+service UserService {
+  // Create a new user
+  rpc CreateUser(CreateUserRequest) returns (User) {
+    option (google.api.http) = {
+      post: "/api/v1/users"
+      body: "*"
+    };
+  }
+
+  // Get user by ID
+  rpc GetUser(GetUserRequest) returns (User) {
+    option (google.api.http) = {
+      get: "/api/v1/users/{id}"
+    };
+  }
+
+  // Update user
+  rpc UpdateUser(UpdateUserRequest) returns (User) {
+    option (google.api.http) = {
+      put: "/api/v1/users/{id}"
+      body: "*"
+    };
+  }
+
+  // Delete user
+  rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse) {
+    option (google.api.http) = {
+      delete: "/api/v1/users/{id}"
+    };
+  }
+
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserByEmailResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/users/email/{email}"
+    };
+  }
+}
+
+// Email service definition
+service EmailService {
+  // Register a new email address
+  rpc RegisterEmail(RegisterEmailRequest) returns (Email) {
+    option (google.api.http) = {
+      post: "/api/v1/emails"
+      body: "*"
+    };
+  }
+
+  // Verify email address
+  rpc VerifyEmail(VerifyEmailRequest) returns (Email) {
+    option (google.api.http) = {
+      post: "/api/v1/emails/verify"
+      body: "*"
+    };
+  }
+
+  // Create email alias
+  rpc CreateAlias(CreateAliasRequest) returns (Alias) {
+    option (google.api.http) = {
+      post: "/api/v1/aliases"
+      body: "*"
+    };
+  }
+
+  // List aliases for a user
+  rpc ListAliases(ListAliasesRequest) returns (ListAliasesResponse) {
+    option (google.api.http) = {
+      get: "/api/v1/aliases"
+    };
+  }
+
+  rpc UpdateAlias(UpdateAliasRequest) returns (Alias) {
+    option (google.api.http) = {
+      put: "/api/v1/aliases/{id}"
+      body: "*"
+    };
+  }
+
+  rpc DeleteAlias(DeleteAliasRequest) returns (DeleteAliasResponse){
+    option (google.api.http) = {
+      delete: "/api/v1/aliases/{id}"
+    };
+  }
+
+}
+
+// User related messages
+message User {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp updated_at = 5;
+}
+
+message CreateUserRequest {
+  string username = 1;
+  string email = 2;
+  string password = 3;
+}
+
+message GetUserRequest {
+  string id = 1;
+}
+
+message UpdateUserRequest {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+}
+
+message DeleteUserRequest {
+  string id = 1;
+}
+
+message DeleteUserResponse {
+  bool success = 1;
+}
+
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message GetUserByEmailResponse {
+  string user_id = 1;
+}
+
+// Email related messages
+message Email {
+  string id = 1;
+  string user_id = 2;
+  string address = 3;
+  bool verified = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message RegisterEmailRequest {
+  string user_id = 1;
+  string email_address = 2;
+}
+
+message VerifyEmailRequest {
+  string token = 1;
+}
+
+// Alias related messages
+message Alias {
+  string id = 1;
+  string user_id = 2;
+  string email_id = 3;
+  string alias_address = 4;
+  google.protobuf.Timestamp created_at = 5;
+  google.protobuf.Timestamp updated_at = 6;
+}
+
+message CreateAliasRequest {
+  string user_id = 1;
+  string email_id = 2;
+  string alias_prefix = 3;
+}
+
+message GetAliasRequest {
+  string id = 1;
+}
+
+message UpdateAliasRequest {
+  string id = 1;
+  string email_id = 2;
+  string alias_prefix = 3;
+}
+
+message DeleteAliasRequest {
+  string id = 1;
+}
+
+message DeleteAliasResponse {
+  bool success = 1;
+}
+
+message ListAliasesRequest {
+  string user_id = 1;
+}
+
+message ListAliasesResponse {
+  repeated Alias aliases = 1;
+}

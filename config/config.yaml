@@ -1,0 +1,30 @@
+# Server configuration
+grpc:
+  port: 9090
+http:
+  port: 8080
+
+# Logging configuration
+logging:
+  format: console # or json
+  level: info # debug, info, warn, error, fatal
+  time_format: "2006-01-02 15:04:05"
+
+# Database configuration
+database:
+  path: aliasme.db
+
+# OVH configuration
+ovh:
+  endpoint: ""
+  application_key: ""
+  application_secret: ""
+  consumer_key: ""
+
+# SMTP configuration
+smtp:
+  host: ""
+  port: ""
+  username: ""
+  password: ""
+  from_email: ""
